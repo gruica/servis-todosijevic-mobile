@@ -1,93 +1,73 @@
-name: Build Android APK
+name: Build Android APK - MANUAL FIX
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
     
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Setup Java JDK 17
+    - name: Setup Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Install dependencies
-      run: npm install
-      
-    - name: Build frontend only
-      run: npx vite build
-      
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      
-    - name: Install Capacitor CLI
-      run: npm install -g @capacitor/cli
-      
-    - name: Sync Capacitor
-      run: npx cap sync android
-      
-    - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
-      
-    - name: Build APK
+      with:
+        api-level: 34
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install Capacitor
       run: |
-        cd android
-        ./gradlew assembleDebug --no-daemon
+        npm install @capacitor/cli@6.0.0 @capacitor/core@6.0.0 @capacitor/android@6.0.0 --no-save
+        
+    - name: Prepare web files
+      run: |
+        mkdir -p www
+        if [ -f index.html ]; then
+          cp index.html www/
+        elif [ -f client/index.html ]; then
+          cp client/index.html www/
+        else
+          echo "HTML file not found"
+          exit 1
+        fi
+        ls -la www/
+        
+    - name: Initialize Capacitor
+      run: |
+        npx cap init "ServisTodosijevic" com.frigosistem.todosijevic --web-dir=www
+        
+    - name: Add Android platform
+      run: |
+        npx cap add android
+        
+    - name: Sync Capacitor
+      run: |
+        npx cap sync android
+        
+    - name: Build APK
+      working-directory: ./android
+      run: |
+        chmod +x ./gradlew
+        ./gradlew assembleDebug --stacktrace --info
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: servis-todosijevic-debug-apk
+        name: servis-todosijevic-apk
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
-        
-    - name: Create Release
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ github.run_number }}
-        name: Servis Todosijević APK v${{ github.run_number }}
-        body: |
-          📱 **Servis Todosijević Android Aplikacija**
-          
-          **Verzija:** v${{ github.run_number }}
-          **Datum:** ${{ github.event.head_commit.timestamp }}
-          **Commit:** ${{ github.sha }}
-          
-          ## 📥 Instalacija
-          1. Preuzmite APK datoteku
-          2. Omogućite "Nepoznati izvori" u podešavanjima telefona
-          3. Otvorite APK datoteku i instalirajte
-          
-          ## 🔧 Funkcionalnosti
-          - Kompletna administracija servisa
-          - Offline rad
-          - Brž pristup podacima
-          - Professional mobile interface
-          
-          ## 📱 Kompatibilnost
-          - Android 7.0+ (API 24)
-          - Sve Android verzije telefona
-          
-          ---
-          *Kreirana automatski GitHub Actions workflow-om*
-        files: android/app/build/outputs/apk/debug/app-debug.apk
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
