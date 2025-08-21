@@ -1,26 +1,27 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.frigosistem.todosijevic',
-  appName: 'Servis Todosijević',
-  webDir: 'www',
+  appId: 'me.tehnoservis.app',
+  appName: 'TehnoServis CG',
+  webDir: 'dist',
   server: {
-    androidScheme: 'https',
-    // Samo za razvoj - u produkciji ukloniti ovu opciju
-    // url: 'http://192.168.1.100:5000', // Zameniti sa vašom lokalnom IP adresom
+    androidScheme: 'https'
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
       launchAutoHide: true,
-      backgroundColor: "#1E293B",
+      backgroundColor: "#1e40af",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
     },
     StatusBar: {
-      backgroundColor: "#1E293B",
+      backgroundColor: "#1e40af",
       style: "DARK",
       overlaysWebView: false,
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
     },
   },
 };
