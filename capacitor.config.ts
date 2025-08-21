@@ -1,9 +1,9 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.servistodosijevic.app',
+  appId: 'com.frigosistem.todosijevic',
   appName: 'Servis Todosijević',
-  webDir: 'dist/public',
+  webDir: 'www',
   server: {
     androidScheme: 'https',
     // Samo za razvoj - u produkciji ukloniti ovu opciju
